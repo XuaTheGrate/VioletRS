@@ -1,0 +1,10 @@
+from std import { io };
+
+fun main(): Void {
+    x: Integer = 123;
+
+    mut str: String;
+    str = "world!";
+
+    io.println("Hello, " + world);
+}
