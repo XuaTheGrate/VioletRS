@@ -1,6 +1,6 @@
 pub mod token;
 
-use std::{fs, process};
+use std::{fs, error::Error};
 
 pub use self::token::{Token, TokenType, KEYWORDS};
 
@@ -23,13 +23,9 @@ impl Lexer {
         Lexer::new(parsed)
     }
 
-    pub fn from_file(fname: &str) -> Lexer {
-        let data = fs::read_to_string(fname)
-            .unwrap_or_else(|err| {
-                eprintln!("Error occured reading file: {}", err);
-                process::exit(1);
-            });
-        Lexer::from_text(data)
+    pub fn from_file(fname: &str) -> Result<Lexer, Box<dyn Error>> {
+        let data = fs::read_to_string(fname)?;
+        Ok(Lexer::from_text(data))
     }
 
     pub fn analyze(&mut self) -> Vec<Token> {
