@@ -3,8 +3,8 @@ from std import { io };
 fun main(): Void {
     x: Integer = 123;
 
-    mut str: String;
-    str = "world!";
+    mut world: String;
+    world = "world!";
 
     io.println("Hello, " + world);
 }
