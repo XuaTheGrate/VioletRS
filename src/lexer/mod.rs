@@ -2,7 +2,7 @@ pub mod token;
 
 use std::{fs, error::Error};
 
-pub use self::token::{Token, TokenType, KEYWORDS};
+pub use self::token::{Token, KEYWORDS};
 
 pub struct Lexer {
     pub lineno: usize,
@@ -73,8 +73,7 @@ impl Lexer {
     }
 
     fn keyword(&self, name: &str) -> Option<Token> {
-        KEYWORDS.get(&name)
-            .map(|&t| Token::new(t, name.to_string()))
+        KEYWORDS.get(name).map(|t| t.clone())
     }
 
     fn identifier(&mut self) -> Result<Token, String> {
@@ -83,7 +82,7 @@ impl Lexer {
         self.advance();
         let mut char = match self.current() {
             Some(c) => c,
-            None => return Ok(Token::new(TokenType::Identifier, word))
+            None => return Ok(Token::Identifier(word))
         };
 
         while char.is_alphanumeric() || char == '_' {
@@ -95,7 +94,12 @@ impl Lexer {
             };
         };
 
-        Ok(self.keyword(&word).unwrap_or_else(|| Token::new(TokenType::Identifier, word)))
+        let token = match self.keyword(&word) {
+            Some(t) => t,
+            None => Token::Identifier(word)
+        };
+
+        Ok(token)
     }
 
     fn hexdigit(&mut self, mut num: String) -> Result<Token, String> {
@@ -111,7 +115,7 @@ impl Lexer {
             num.push(c);
             self.advance();
         }
-        Ok(Token::new(TokenType::HexInteger, num))
+        Ok(Token::HexInteger(num))
     }
 
     fn digit(&mut self, mut num: String) -> Result<Token, String> {
@@ -133,9 +137,9 @@ impl Lexer {
                     num.push(c);
                     self.advance();
                 }
-                Ok(Token::new(TokenType::Double, num))
+                Ok(Token::Double(num))
             }
-            _ => Ok(Token::new(TokenType::Integer, num))
+            _ => Ok(Token::Integer(num))
         }
     }
 
@@ -165,7 +169,7 @@ impl Lexer {
             }
         };
         self.advance();
-        Ok(Token::new(TokenType::String, str))
+        Ok(Token::String(str))
     }
 
     fn peek_next(&self) -> Option<char> {
@@ -200,19 +204,17 @@ impl Lexer {
             return Ok(Some(self.string()?));
         }
 
-        let mut value = c.to_string();
-
         let token = match c {
-            '{' => TokenType::BraceOpen,
-            '}' => TokenType::BraceClose,
-            ';' => TokenType::Semicolon,
-            '(' => TokenType::ParenOpen,
-            ')' => TokenType::ParenClose,
-            ':' => TokenType::Colon,
-            '.' => TokenType::Dot,
-            '+' => TokenType::Plus,
-            '-' => TokenType::Minus,
-            '*' => TokenType::Asterisk,
+            '{' => Token::BraceOpen,
+            '}' => Token::BraceClose,
+            ';' => Token::Semicolon,
+            '(' => Token::ParenOpen,
+            ')' => Token::ParenClose,
+            ':' => Token::Colon,
+            '.' => Token::Dot,
+            '+' => Token::Plus,
+            '-' => Token::Minus,
+            '*' => Token::Asterisk,
             '/' => {
                 match self.peek_next() {
                     Some('/') => {
@@ -223,47 +225,43 @@ impl Lexer {
 
                         return self.read_next();
                     }
-                    _ => TokenType::ForwardSlash
+                    _ => Token::ForwardSlash
                 }
             }
             '=' => {
                 match self.peek_next() {
                     Some('=') => {
                         self.advance();
-                        value.push('=');
-                        TokenType::EqualTo
+                        Token::EqualTo
                     },
-                    _ => TokenType::Equals
+                    _ => Token::Equals
                 }
             }
             '>' => {
                 match self.peek_next() {
                     Some('=') => {
                         self.advance();
-                        value.push('=');
-                        TokenType::GreaterEqual
+                        Token::GreaterEqual
                     },
-                    _ => TokenType::Greater
+                    _ => Token::Greater
                 }
             }
             '<' => {
                 match self.peek_next() {
                     Some('=') => {
                         self.advance();
-                        value.push('=');
-                        TokenType::LessEqual
+                        Token::LessEqual
                     },
-                    _ => TokenType::Less
+                    _ => Token::Less
                 }
             }
             '!' => {
                 match self.peek_next() {
                     Some('=') => {
                         self.advance();
-                        value.push('=');
-                        TokenType::NotEqual
+                        Token::NotEqual
                     },
-                    _ => TokenType::Exclamation
+                    _ => Token::Exclamation
                 }
             }
             _ => {
@@ -271,6 +269,6 @@ impl Lexer {
             }
         };
         self.advance();
-        Ok(Some(Token::new(token, value)))
+        Ok(Some(token))
     }
 }

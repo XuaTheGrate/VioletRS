@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum TokenType {
-    Identifier, Integer, HexInteger, Double, String,
+#[derive(Clone, Debug, PartialEq)]
+pub enum Token {
+    Identifier(String), Integer(String),
+    HexInteger(String), Double(String),
+    String(String),
 
     From, Import, Fun, Mut,
 
@@ -15,22 +17,10 @@ pub enum TokenType {
 }
 
 lazy_static! {
-    pub static ref KEYWORDS: HashMap<&'static str, TokenType> = HashMap::from([
-        ("from", TokenType::From),
-        ("import", TokenType::Import),
-        ("fun", TokenType::Fun),
-        ("mut", TokenType::Mut)
+    pub static ref KEYWORDS: HashMap<&'static str, Token> = HashMap::from([
+        ("from", Token::From),
+        ("import", Token::Import),
+        ("fun", Token::Fun),
+        ("mut", Token::Mut)
     ]);
-}
-
-#[derive(Debug)]
-pub struct Token {
-    pub typ: TokenType,
-    pub value: String
-}
-
-impl Token {
-    pub fn new(typ: TokenType, value: String) -> Token {
-        Token { typ, value }
-    }
 }
